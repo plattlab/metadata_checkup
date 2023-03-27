@@ -4,7 +4,14 @@ check sequencing metadata files for errors
 
 ## How to use
 
-Either run the code chunks in RStudio or use the following command line
+Download or clone the repository
+
+``
+git clone https://github.com/plattlab/metadata_checkup.git
+``
+
+
+and either run the code chunks in RStudio or use the following command line
 
 ``
 Rscript -e "rmarkdown::render('check_metasheet.Rmd', params = list(filepath = './files/my_metadata_file.xlsx'), output_file ='./files/my_metadata_file.nb.html')"
