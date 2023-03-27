@@ -1,0 +1,159 @@
+---
+title: "Check metadata file for errors"
+author: 
+- name: Rick Farouni
+date: '`r format(Sys.Date(), "%Y-%B-%d")`'
+output:
+  html_notebook:
+    df_print: paged
+    code_folding: show
+    toc: no
+    toc_float: 
+      collapsed: false
+      smooth_scroll: false
+params:
+  filepath:
+    value: x      
+            
+---
+
+
+```{r include=FALSE}
+set.seed(42)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+options(
+  readr.show_progress = FALSE,
+  digits = 4
+)
+suppressMessages(library(readxl))
+suppressMessages(library(tidyverse))
+```
+
+
+```{r include=FALSE}
+check_metadata <- function(metadata, allowed_indices) {
+  metadata_subset <-
+    metadata %>%
+    dplyr::select(Sample, EXTERNAL_SAMPLE_NAME, BARCODES, INDEX2) %>%
+    set_names(c("sample_num", "sample_name", "idx1", "idx2")) %>%
+    mutate(
+      idx1_rev = as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(idx1))),
+      idx2_rev = as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(idx2)))
+    )  %>%
+    unite("idx_pair", c("idx1", "idx2"), remove = F) %>%
+    add_count(sample_name, name = "sample_name_dup") %>%
+    add_count(idx_pair, name = "idx_pair_dup") %>%
+    mutate(
+      sample_name_dup = !(sample_name_dup == 1),
+      idx_pair_dup = !(idx_pair_dup == 1)
+    ) %>%
+    mutate(
+      idx1_not_in_IDX1 = !(idx1 %in% allowed_indices$IDX1),
+      idx2_not_in_IDX2 = !(idx2 %in% allowed_indices$IDX2),
+      idx1_in_IDX2 = idx1 %in% allowed_indices$IDX2,
+      idx2_in_IDX1 = idx2 %in% allowed_indices$IDX1,
+      idx1_rev_in_IDX1 = idx1_rev %in% allowed_indices$IDX1,
+      idx2_rev_in_IDX2 = idx2_rev %in% allowed_indices$IDX2,
+      idx1_rev_in_IDX2 = idx1_rev %in% allowed_indices$IDX2,
+      idx2_rev_in_IDX1 = idx2_rev %in% allowed_indices$IDX1
+    ) %>%
+    dplyr::select(
+      sample_num,
+      sample_name,
+      idx1,
+      idx2,
+      sample_name_dup,
+      idx_pair_dup,
+      idx1_rev_in_IDX1,
+      idx2_rev_in_IDX2,
+      idx1_rev_in_IDX2,
+      idx2_rev_in_IDX1,
+      idx1_in_IDX2,
+      idx2_in_IDX1,
+      idx1_not_in_IDX1,
+      idx2_not_in_IDX2
+    ) %>%
+    mutate(across(sample_name_dup:idx2_not_in_IDX2, as.integer)) %>%
+    unite(
+      col = "indicator_dup",
+      sample_name_dup:idx_pair_dup,
+      remove = F,
+      sep = ""
+    )  %>%
+    unite(
+      col = "indx_valid",
+      idx1_rev_in_IDX1:idx2_not_in_IDX2,
+      remove = F,
+      sep = ""
+    ) %>%
+    mutate(flag_dup = strtoi(indicator_dup),
+           flag_indx = strtoi(indx_valid)) %>%
+    select(
+      sample_num,
+      sample_name,
+      idx1,
+      idx2,
+      indicator_dup,
+      indx_valid,
+      flag_dup,
+      flag_indx,
+      everything()
+    )
+  
+  return(metadata_subset)
+}
+```
+
+
+# Read files 
+
+```{r}
+# Rscript -e "rmarkdown::render('check_metasheet.Rmd', params = list(filepath = './files/20230324_Metadata_NextSeq_SR150_HIGH_OB.xlsx'), output_file ='./files/20230324_Metadata_NextSeq_SR150_HIGH_OB.nb.html')"
+
+files_dir <- file.path("./files")
+allowed_indicies_filepath <- file.path(files_dir, "20201028_Barcode_combinations_Platt_group_2nd_Rd_PCR.xlsx")
+#metadata_filepath <- file.path(files_dir, "20230324_Metadata_NextSeq_SR150_HIGH_OB.xlsx")
+metadata_filepath <- params$filepath
+cat("The filepath passed to the notebook is:", metadata_filepath, "\n")
+```
+
+```{r}
+metadata <- 
+  read_excel(metadata_filepath, 
+             skip = 7)  %>%
+  drop_na(BARCODES)
+colnames(metadata)[1] <- "Sample"
+
+allowed_indices <-
+  read_excel(allowed_indicies_filepath)
+
+# metadata %>%
+#   dplyr::select(Sample, EXTERNAL_SAMPLE_NAME, BARCODES, INDEX2) %>%
+#   dplyr::count(BARCODES, INDEX2) %>%
+#   arrange(-n)
+```
+
+
+# Check for errors
+
+```{r}
+metadata_subset <- check_metadata(metadata, allowed_indices)
+metadata_subset
+```
+
+
+## Check which rows have an error
+```{r}
+errors_dt <-
+  metadata_subset %>%
+  filter(flag_dup!=0 | flag_indx!=0)
+errors_dt
+```
+
+
+
+
+```{r}
+sessionInfo()
+```
+
