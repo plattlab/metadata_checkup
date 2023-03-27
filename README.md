@@ -2,7 +2,15 @@
 
 check sequencing metadata files for errors
 
+
+## Required Software
+
+- R
+- RStudio
+- rmarkdown, readxl, and tidyverse R packages
+
 ## How to use
+
 
 Download or clone the repository
 
