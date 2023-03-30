@@ -19,12 +19,12 @@ params:
 
 
 ```{r include=FALSE}
-set.seed(42)
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
-options(
-  readr.show_progress = FALSE,
-  digits = 4
-)
+#set.seed(42)
+#knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+#options(
+#  readr.show_progress = FALSE,
+#  digits = 4
+#)
 suppressMessages(library(readxl))
 suppressMessages(library(tidyverse))
 ```
