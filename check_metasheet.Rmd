@@ -34,8 +34,6 @@ suppressMessages(library(tidyverse))
 check_metadata <- function(metadata, allowed_indices) {
   metadata_subset <-
     metadata %>%
-    dplyr::select(Sample, EXTERNAL_SAMPLE_NAME, BARCODES, INDEX2) %>%
-    set_names(c("sample_num", "sample_name", "idx1", "idx2")) %>%
     mutate(
       idx1_rev = as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(idx1))),
       idx2_rev = as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(idx2)))
@@ -58,7 +56,6 @@ check_metadata <- function(metadata, allowed_indices) {
       idx2_rev_in_IDX1 = idx2_rev %in% allowed_indices$IDX1
     ) %>%
     dplyr::select(
-      sample_num,
       sample_name,
       idx1,
       idx2,
@@ -89,7 +86,6 @@ check_metadata <- function(metadata, allowed_indices) {
     mutate(flag_dup = strtoi(indicator_dup),
            flag_indx = strtoi(indx_valid)) %>%
     select(
-      sample_num,
       sample_name,
       idx1,
       idx2,
@@ -112,26 +108,26 @@ check_metadata <- function(metadata, allowed_indices) {
 
 files_dir <- file.path("./files")
 allowed_indicies_filepath <- file.path(files_dir, "20201028_Barcode_combinations_Platt_group_2nd_Rd_PCR.xlsx")
-#metadata_filepath <- file.path(files_dir, "20230324_Metadata_NextSeq_SR150_HIGH_OB.xlsx")
-metadata_filepath <- params$filepath
+metadata_filepath <- params$filepath 
+metadata_filepath <-file.path(files_dir, "20240516_EX146_cDNA_vDNA_AM_Metadata_SR75_HIGH.xlsx")
 cat("The filepath passed to the notebook is:", metadata_filepath, "\n")
 ```
+
+
 
 ```{r}
 metadata <- 
   read_excel(metadata_filepath, 
-             skip = 7)  %>%
-  drop_na(BARCODES)
-colnames(metadata)[1] <- "Sample"
+             skip = 3) %>%
+  drop_na(`i7 index1`) %>%
+  dplyr::select(c("Sample Name", "i7 index1", "i5 index2")) %>%
+  set_names(c("sample_name", "idx1", "idx2"))
 
 allowed_indices <-
   read_excel(allowed_indicies_filepath)
 
-# metadata %>%
-#   dplyr::select(Sample, EXTERNAL_SAMPLE_NAME, BARCODES, INDEX2) %>%
-#   dplyr::count(BARCODES, INDEX2) %>%
-#   arrange(-n)
 ```
+
 
 
 # Check for errors
