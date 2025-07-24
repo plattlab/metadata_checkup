@@ -109,7 +109,7 @@ check_metadata <- function(metadata, allowed_indices) {
 files_dir <- file.path("./files")
 allowed_indicies_filepath <- file.path(files_dir, "20201028_Barcode_combinations_Platt_group_2nd_Rd_PCR.xlsx")
 metadata_filepath <- params$filepath 
-metadata_filepath <-file.path(files_dir, "20240516_EX146_cDNA_vDNA_AM_Metadata_SR75_HIGH.xlsx")
+# metadata_filepath <-file.path(files_dir, "20240516_EX146_cDNA_vDNA_AM_Metadata_SR75_HIGH.xlsx")
 cat("The filepath passed to the notebook is:", metadata_filepath, "\n")
 ```
 
